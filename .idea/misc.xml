@@ -3,8 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Aritra Mandal/StudioProjects/VoiceAssistant2/app/src/main/res/drawable-v24/circular_button.xml" value="0.2484375" />
         <entry key="..\:/Users/Aritra Mandal/StudioProjects/VoiceAssistant2/app/src/main/res/drawable/ic_baseline_mic_24.xml" value="0.2484375" />
-        <entry key="..\:/Users/Aritra Mandal/StudioProjects/VoiceAssistant2/app/src/main/res/layout/activity_main.xml" value="0.23229166666666667" />
+        <entry key="..\:/Users/Aritra Mandal/StudioProjects/VoiceAssistant2/app/src/main/res/drawable/ic_baseline_mic_off_24.xml" value="0.2484375" />
+        <entry key="..\:/Users/Aritra Mandal/StudioProjects/VoiceAssistant2/app/src/main/res/layout/activity_main.xml" value="0.2" />
       </map>
     </option>
   </component>
