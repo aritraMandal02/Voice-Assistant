@@ -22,8 +22,8 @@
 
     <ImageButton
         android:id="@+id/im_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="116dp"
+        android:layout_height="92dp"
         android:layout_marginTop="152dp"
         android:src="@drawable/ic_baseline_mic_off_24"
         app:layout_constraintEnd_toEndOf="parent"
