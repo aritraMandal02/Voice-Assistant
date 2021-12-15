@@ -77,9 +77,8 @@ public class MainActivity extends AppCompatActivity {
                     tv.setText("Listening");
                     tv1.setVisibility(View.INVISIBLE);
                     progressBar2.setVisibility(View.VISIBLE);
-
-
                 }
+
                 else{
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     // stop listening
@@ -115,19 +114,21 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEndOfSpeech() {
-
+                speechRecognizer.startListening(speechRecognizerIntent);
             }
 
             @Override
             public void onError(int error) {
-
+                speechRecognizer.startListening(speechRecognizerIntent);
             }
 
             @Override
             public void onResults(Bundle results) {
                 ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if(data != null)
+                if(data.get(0) != null){
                     et.setText(data.get(0));
+                }
+                speechRecognizer.startListening(speechRecognizerIntent);
             }
 
             @Override
