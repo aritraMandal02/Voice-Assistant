@@ -17,8 +17,13 @@ import android.speech.SpeechRecognizer;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.github.ybq.android.spinkit.sprite.Sprite;
+import com.github.ybq.android.spinkit.style.DoubleBounce;
+import com.github.ybq.android.spinkit.style.ThreeBounce;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -27,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     ImageButton imButton;
     EditText et;
-    TextView tv;
+    TextView tv, tv1;
 
 
     int count = 0;
@@ -38,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
         imButton = findViewById(R.id.im_button);
         et = findViewById(R.id.editTextTextPersonName);
         tv = findViewById(R.id.textView);
+        tv1 = findViewById(R.id.textView2);
+
+        ProgressBar progressBar = (ProgressBar)findViewById(R.id.spin_kit);
+        Sprite doubleBounce = new DoubleBounce();
+        progressBar.setIndeterminateDrawable(doubleBounce);
+
+        ProgressBar progressBar2 = (ProgressBar)findViewById(R.id.spin_kit2);
+        Sprite threeBounce = new ThreeBounce();
+        progressBar2.setIndeterminateDrawable(threeBounce);
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
         {
@@ -59,12 +73,22 @@ public class MainActivity extends AppCompatActivity {
                     // start listening
                     speechRecognizer.startListening(speechRecognizerIntent);
                     count = 1;
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv.setText("Listening");
+                    tv1.setVisibility(View.INVISIBLE);
+                    progressBar2.setVisibility(View.VISIBLE);
+
+
                 }
                 else{
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     // stop listening
                     speechRecognizer.stopListening();
                     count = 0;
+                    progressBar.setVisibility(View.INVISIBLE);
+                    tv.setText("Say something");
+                    tv1.setVisibility(View.VISIBLE);
+                    progressBar2.setVisibility(View.INVISIBLE);
                 }
             }
         });
