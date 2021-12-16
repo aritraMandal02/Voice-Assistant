@@ -31,6 +31,12 @@ import com.github.ybq.android.spinkit.style.ThreeBounce;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity {
 
     TextToSpeech tts;
@@ -141,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         // A delay given
-                        if(count==1) {
+                        if(count==1 && !tts.isSpeaking()) {
                             speechRecognizer.startListening(speechRecognizerIntent);
                         }
                     }
@@ -155,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         // A delay given
-                        if(count==1) {
+                        if(count==1 && !tts.isSpeaking()) {
                             speechRecognizer.startListening(speechRecognizerIntent);
                         }
                     }
@@ -166,11 +172,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResults(Bundle results) {
                 ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if(data.get(0) != null){
-                    et.setText(data.get(0));
-                }
+
                 if(data.get(0).equals("stop")){
-                    tts.speak("Stopping", TextToSpeech.QUEUE_FLUSH, null);
+                    tts.speak("Okay stopping", TextToSpeech.QUEUE_FLUSH, null);
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     speechRecognizer.stopListening();
                     count = 0;
@@ -179,12 +183,29 @@ public class MainActivity extends AppCompatActivity {
                     tv1.setVisibility(View.VISIBLE);
                     progressBar2.setVisibility(View.INVISIBLE);
                 }
+                if(data.get(0) != null){
+
+                    et.setText(data.get(0));
+                    tts.speak(data.get(0), TextToSpeech.QUEUE_FLUSH, null);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // A delay given
+                            while(tts.isSpeaking()){
+                                int i = 0;
+                            }
+                            if(count==1 && !tts.isSpeaking()) {
+                                speechRecognizer.startListening(speechRecognizerIntent);
+                            }
+                        }
+                    }, 1000);
+                }
                 else {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             // A delay given
-                            if (count == 1) {
+                            if (count == 1 && !tts.isSpeaking()) {
                                 speechRecognizer.startListening(speechRecognizerIntent);
                             }
                         }
@@ -200,6 +221,35 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEvent(int eventType, Bundle params) {
+
+            }
+        });
+    }
+
+    private void getResponse(String msg){
+        System.out.println(msg);
+        String url = "http://api.brainshop.ai/get?bid=162170&key=LhZkiqFY8KwyAk8N&uid=[uid]&msg="+msg;
+        String BASE_URL = "http://api.brainshop.ai/";
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        RetrofitAPI retrofitAPI = retrofit.create(RetrofitAPI.class);
+        Call<MsgModel> call = retrofitAPI.getMessage(url);
+        call.enqueue(new Callback<MsgModel>() {
+            @Override
+            public void onResponse(Call<MsgModel> call, Response<MsgModel> response) {
+                if(!response.isSuccessful()){
+                    System.out.println(response.code());
+                    return;
+                }
+                MsgModel model = response.body();
+                System.out.println(model.getCnt());
+
+            }
+
+            @Override
+            public void onFailure(Call<MsgModel> call, Throwable t) {
 
             }
         });
