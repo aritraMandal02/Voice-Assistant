@@ -15,6 +15,8 @@ import android.os.Handler;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -31,6 +33,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    TextToSpeech tts;
     ImageButton imButton;
     EditText et;
     TextView tv, tv1;
@@ -41,10 +44,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         imButton = findViewById(R.id.im_button);
         et = findViewById(R.id.editTextTextPersonName);
         tv = findViewById(R.id.textView);
         tv1 = findViewById(R.id.textView2);
+
+//        tts.setPitch();
+//        tts.setSpeechRate();
+
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if(i == TextToSpeech.SUCCESS){
+                    int result = tts.setLanguage(Locale.ENGLISH);
+                    if(result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED){
+                        Log.e("tts", "Language not supported");
+                    }else{
+                        Log.e("tts", "Initialization failed");
+                    }
+                }
+            }
+        });
 
         ProgressBar progressBar = (ProgressBar)findViewById(R.id.spin_kit);
         Sprite doubleBounce = new DoubleBounce();
@@ -149,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     et.setText(data.get(0));
                 }
                 if(data.get(0).equals("stop")){
+                    tts.speak("Stopping", TextToSpeech.QUEUE_FLUSH, null);
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     speechRecognizer.stopListening();
                     count = 0;
@@ -181,6 +203,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(tts != null){
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
     }
 
     @Override
