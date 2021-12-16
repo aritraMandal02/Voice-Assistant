@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     TextToSpeech tts;
     ImageButton imButton;
     EditText et;
-    TextView tv, tv1;
+    TextView tv, tv1, tv2;
 
 
     int count = 0;
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         et = findViewById(R.id.editTextTextPersonName);
         tv = findViewById(R.id.textView);
         tv1 = findViewById(R.id.textView2);
+        tv2 = findViewById(R.id.textView3);
 
 //        tts.setPitch();
 //        tts.setSpeechRate();
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             public void onResults(Bundle results) {
                 ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-                if(data.get(0).equals("stop")){
+                if(data.get(0).equals("stop") || data.get(0).equals("okay stop") || data.get(0).equals("ok stop")){
                     tts.speak("Okay stopping", TextToSpeech.QUEUE_FLUSH, null);
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     speechRecognizer.stopListening();
@@ -183,10 +184,11 @@ public class MainActivity extends AppCompatActivity {
                     tv1.setVisibility(View.VISIBLE);
                     progressBar2.setVisibility(View.INVISIBLE);
                 }
-                if(data.get(0) != null){
+                else if(data.get(0) != null){
 
                     et.setText(data.get(0));
-                    tts.speak(data.get(0), TextToSpeech.QUEUE_FLUSH, null);
+
+                    getResponse(data.get(0));
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -198,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                                 speechRecognizer.startListening(speechRecognizerIntent);
                             }
                         }
-                    }, 1000);
+                    }, 3000);
                 }
                 else {
                     new Handler().postDelayed(new Runnable() {
@@ -227,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getResponse(String msg){
-        System.out.println(msg);
         String url = "http://api.brainshop.ai/get?bid=162170&key=LhZkiqFY8KwyAk8N&uid=[uid]&msg="+msg;
         String BASE_URL = "http://api.brainshop.ai/";
         Retrofit retrofit = new Retrofit.Builder()
@@ -244,8 +245,8 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 MsgModel model = response.body();
-                System.out.println(model.getCnt());
-
+                tts.speak(model.getCnt(), TextToSpeech.QUEUE_FLUSH, null);
+                tv2.setText(model.getCnt());
             }
 
             @Override
