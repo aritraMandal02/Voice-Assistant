@@ -11,6 +11,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -114,21 +115,60 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEndOfSpeech() {
-                speechRecognizer.startListening(speechRecognizerIntent);
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // A delay given
+                        if(count==1) {
+                            speechRecognizer.startListening(speechRecognizerIntent);
+                        }
+                    }
+                }, 3000);
             }
 
             @Override
             public void onError(int error) {
-                speechRecognizer.startListening(speechRecognizerIntent);
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // A delay given
+                        if(count==1) {
+                            speechRecognizer.startListening(speechRecognizerIntent);
+                        }
+                    }
+                }, 3000);
             }
 
+            @SuppressLint("UseCompatLoadingForDrawables")
             @Override
             public void onResults(Bundle results) {
                 ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if(data.get(0) != null){
                     et.setText(data.get(0));
                 }
-                speechRecognizer.startListening(speechRecognizerIntent);
+                if(data.get(0).equals("stop")){
+                    imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
+                    speechRecognizer.stopListening();
+                    count = 0;
+                    progressBar.setVisibility(View.INVISIBLE);
+                    tv.setText("Say something");
+                    tv1.setVisibility(View.VISIBLE);
+                    progressBar2.setVisibility(View.INVISIBLE);
+                }
+                else {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // A delay given
+                            if (count == 1) {
+                                speechRecognizer.startListening(speechRecognizerIntent);
+                            }
+                        }
+                    }, 3000);
+                }
+
             }
 
             @Override
