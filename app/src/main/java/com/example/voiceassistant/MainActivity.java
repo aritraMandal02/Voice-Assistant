@@ -8,8 +8,10 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.RecognitionListener;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     ImageButton imButton;
     EditText et;
     TextView tv, tv1, tv2;
+    WifiManager wifiManager;
 
 
     int count = 0;
@@ -93,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+
+        setProgressbar(progressBar);
+
         imButton.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("UseCompatLoadingForDrawables")
             @Override
@@ -100,11 +106,12 @@ public class MainActivity extends AppCompatActivity {
                 if(count==0){
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_24));
                     // start listening
+                    if(tts.isSpeaking()){
+                        tts.stop();
+                    }
                     speechRecognizer.startListening(speechRecognizerIntent);
                     count = 1;
-                    progressBar.setVisibility(View.VISIBLE);
                     tv.setText("Listening");
-                    tv1.setVisibility(View.INVISIBLE);
                     progressBar2.setVisibility(View.VISIBLE);
                 }
 
@@ -115,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
                     count = 0;
                     progressBar.setVisibility(View.INVISIBLE);
                     tv.setText("Say something");
-                    tv1.setVisibility(View.VISIBLE);
                     progressBar2.setVisibility(View.INVISIBLE);
                 }
             }
@@ -144,76 +150,126 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onEndOfSpeech() {
 
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // A delay given
-                        if(count==1 && !tts.isSpeaking()) {
-                            speechRecognizer.startListening(speechRecognizerIntent);
-                        }
-                    }
-                }, 3000);
-            }
-
-            @Override
-            public void onError(int error) {
-
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // A delay given
-                        if(count==1 && !tts.isSpeaking()) {
-                            speechRecognizer.startListening(speechRecognizerIntent);
-                        }
-                    }
-                }, 3000);
             }
 
             @SuppressLint("UseCompatLoadingForDrawables")
             @Override
+            public void onError(int error) {
+                progressBar2.setVisibility(View.INVISIBLE);
+                imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
+                count = 0;
+                tv.setText("Say something");
+                tv1.setVisibility(View.VISIBLE);
+            }
+
+            @SuppressLint({"UseCompatLoadingForDrawables", "SetTextI18n"})
+            @Override
             public void onResults(Bundle results) {
                 ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-                if(data.get(0).equals("stop") || data.get(0).equals("okay stop") || data.get(0).equals("ok stop")){
-                    tts.speak("Okay stopping", TextToSpeech.QUEUE_FLUSH, null);
+                progressBar2.setVisibility(View.INVISIBLE);
+                imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
+                count = 0;
+                tv.setText("Say something");
+
+                if(data.get(0).equals("stop") || data.get(0).equals("okay stop") || data.get(0).equals("ok stop") || data.get(0).equals("nothing")){
+                    tts.speak("Okay stopping. You can talk to me anytime you want.", TextToSpeech.QUEUE_FLUSH, null);
                     imButton.setImageDrawable(getDrawable(R.drawable.ic_baseline_mic_off_24));
                     speechRecognizer.stopListening();
                     count = 0;
                     progressBar.setVisibility(View.INVISIBLE);
-                    tv.setText("Say something");
-                    tv1.setVisibility(View.VISIBLE);
-                    progressBar2.setVisibility(View.INVISIBLE);
                 }
-                else if(data.get(0) != null){
 
+                else if(data.get(0).toLowerCase().contains("open facebook")){
                     et.setText(data.get(0));
-
-                    getResponse(data.get(0));
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // A delay given
-                            while(tts.isSpeaking()){
-                                int i = 0;
-                            }
-                            if(count==1 && !tts.isSpeaking()) {
-                                speechRecognizer.startListening(speechRecognizerIntent);
-                            }
-                        }
-                    }, 3000);
-                }
-                else {
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // A delay given
-                            if (count == 1 && !tts.isSpeaking()) {
-                                speechRecognizer.startListening(speechRecognizerIntent);
-                            }
-                        }
-                    }, 3000);
+                    tts.speak("Opening Facebook.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening Facebook");
+                    openFacebook();
                 }
 
+                else if(data.get(0).toLowerCase().contains("open whatsapp")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening WhatsApp.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening WhatsApp");
+                    openWhatsapp();
+                }
+
+                else if(data.get(0).toLowerCase().contains("open gmail")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening Gmail.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening Gmail");
+                    openGmail();
+                }
+
+                else if(data.get(0).toLowerCase().contains("open pubg") || data.get(0).toLowerCase().contains("open bgm")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening B G M I.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening BGMI");
+                    openBGMI();
+                }
+
+                else if(data.get(0).toLowerCase().contains("open youtube")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening YouTube.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening YouTube");
+                    openYouTube();
+                }
+
+                else if(data.get(0).toLowerCase().contains("open camera") || data.get(0).toLowerCase().contains("open the camera")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening Camera.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening Camera");
+                    openCamera();
+                }
+
+                else if(data.get(0).toLowerCase().contains("open chrome") || data.get(0).toLowerCase().contains("open google chrome")){
+                    et.setText(data.get(0));
+                    tts.speak("Opening Chrome.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Opening Chrome");
+                    openChrome();
+                }
+
+                else if(data.get(0).contains("created you") || data.get(0).contains("by whom were you created") || data.get(0).contains("who gave its name") || data.get(0).contains("made you") || data.get(0).contains("by whom were you made")){
+                    et.setText(data.get(0));
+                    tts.speak("I was created by my friend Aritra. He is a student of N I T Durgapur.", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("I was created by my friend Aritra. He is a student of NIT Durgapur.");
+                }
+
+                else if(data.get(0).contains("your name") || data.get(0).equals("name") || data.get(0).equals("what is the name")){
+                    et.setText(data.get(0));
+                    tts.speak("My name is Mila. What is your name?", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("My name is Mila. What is your name?");
+                }
+
+                else if(data.get(0).toLowerCase().contains("open wi-fi") || data.get(0).toLowerCase().contains("open the wi-fi") || data.get(0).toLowerCase().contains("on wi-fi") || data.get(0).toLowerCase().contains("wi-fi on") || data.get(0).toLowerCase().contains("on the wi-fi")){
+                    et.setText(data.get(0));
+                    openWifi();
+                    tts.speak("Okay opening WiFi", TextToSpeech.QUEUE_FLUSH, null);
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Okay opening WiFi");
+                }
+
+                else if(data.get(0).toLowerCase().contains("close wi-fi") || data.get(0).toLowerCase().contains("close the wi-fi") || data.get(0).toLowerCase().contains("off wi-fi") || data.get(0).toLowerCase().contains("wi-fi off") || data.get(0).toLowerCase().contains("off the wi-fi")){
+                    et.setText(data.get(0));
+                    tts.speak("Okay closing WiFi", TextToSpeech.QUEUE_FLUSH, null);
+                    closeWifi();
+                    progressBar.setVisibility(View.VISIBLE);
+                    tv2.setText("Okay closing WiFi");
+                }
+
+                else if(data.get(0) != null){
+                    et.setText(data.get(0));
+                    getResponse(data.get(0), progressBar);
+                }
             }
 
             @Override
@@ -228,7 +284,124 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void getResponse(String msg){
+    public void openFacebook(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.facebook.katana");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openWhatsapp(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.whatsapp");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openWifi() {
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager.setWifiEnabled(true);
+        Toast.makeText(this, "WiFi On", Toast.LENGTH_SHORT).show();
+    }
+
+    public void closeWifi(){
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager.setWifiEnabled(false);
+
+    }
+
+    public void openGmail(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.google.android.gm");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openBGMI(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.pubg.imobile");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openYouTube(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.google.android.youtube");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openCamera(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.sec.android.app.camera");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void openChrome(){
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.chrome");
+        if(launchIntent != null){
+            startActivity(launchIntent);
+        }else{
+            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+//    public void openYouTube(){
+//        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.google.android.youtube");
+//        if(launchIntent != null){
+//            startActivity(launchIntent);
+//        }else{
+//            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//
+//    public void openYouTube(){
+//        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.google.android.youtube");
+//        if(launchIntent != null){
+//            startActivity(launchIntent);
+//        }else{
+//            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//
+//    public void openYouTube(){
+//        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.google.android.youtube");
+//        if(launchIntent != null){
+//            startActivity(launchIntent);
+//        }else{
+//            Toast.makeText(this, "There is no package", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+
+    public void setProgressbar(ProgressBar progressbar){
+        final Handler h = new Handler();
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                if(!tts.isSpeaking()){
+                    progressbar.setVisibility(View.INVISIBLE);
+                }
+                h.postDelayed(this, 1000);
+            }
+        };
+        h.postDelayed(r, 1000);
+
+    }
+
+    private void getResponse(String msg, ProgressBar progressBar){
         String url = "http://api.brainshop.ai/get?bid=162170&key=LhZkiqFY8KwyAk8N&uid=[uid]&msg="+msg;
         String BASE_URL = "http://api.brainshop.ai/";
         Retrofit retrofit = new Retrofit.Builder()
@@ -241,11 +414,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<MsgModel> call, Response<MsgModel> response) {
                 if(!response.isSuccessful()){
-                    System.out.println(response.code());
                     return;
                 }
                 MsgModel model = response.body();
                 tts.speak(model.getCnt(), TextToSpeech.QUEUE_FLUSH, null);
+                progressBar.setVisibility(View.VISIBLE);
                 tv2.setText(model.getCnt());
             }
 
